@@ -1,4 +1,3 @@
-# Starter code for CS 165B HW2 Spring 2019
 import math
 import numpy as np 
 
@@ -14,7 +13,7 @@ def discriminantLine (centroidPos, centroidNeg):
 
 def findOrtogonalW (centroidPos,centroidNeg):
     return np.subtract(centroidPos,centroidNeg)
-    #[i - j for (i, j) in zip(centroidPos, centroidNeg)]
+    
 
 def classifyPoint (dataPoint, orthogAB,orthogAC,orthogBC,discrimAB,discrimAC,discrimBC):
     #print(dataPoint)
@@ -23,13 +22,13 @@ def classifyPoint (dataPoint, orthogAB,orthogAC,orthogBC,discrimAB,discrimAC,dis
     dotBC = np.dot(dataPoint,orthogBC)
 
     if dotAB - discrimAB > 0:
-        # between A or B, it's A. So check between A or C
+        #Check between class A or class C
         if dotAC - discrimAC > 0:
             return 1
         else:
             return 3
     else:
-        # between A or B, it's B. So check between B or C
+        #check between class B or class C
         if dotBC - discrimBC > 0:
             return 2
         else:
@@ -73,15 +72,9 @@ def run_train_test(training_input, testing_input):
     sizeOfB = training_input[0][2]
     sizeOfC = training_input[0][3]
 
-
     classOfA = training_input[1:1+sizeOfA]
     classOfB = training_input[2 + sizeOfA: 2 + sizeOfA + sizeOfB]
     classOfC = training_input[1 + sizeOfA + sizeOfB: ]
-
-    print(len(classOfA))
-    print(len(classOfB))
-    print(len(classOfC))
-
 
 
     #compute centroids of A,B,C
@@ -89,25 +82,19 @@ def run_train_test(training_input, testing_input):
     centroidOfB = centroid(classOfB)
     centroidOfC = centroid(classOfC)
 
-    print(centroidOfA)
-    print(centroidOfB)
-    print(centroidOfC)
-
     #compute discriminant lines
     discrimAB = discriminantLine(centroidOfA,centroidOfB)
     discrimAC = discriminantLine(centroidOfA,centroidOfC)
     discrimBC = discriminantLine(centroidOfB,centroidOfC)
 
-    print(discrimAB)
-    print(discrimAC)
-    print(discrimBC)
 
+    #compute orthogonal W
     orthogAB = findOrtogonalW(centroidOfA,centroidOfB)
     orthogAC = findOrtogonalW(centroidOfA,centroidOfC)
     orthogBC = findOrtogonalW(centroidOfB,centroidOfC)
 
-    print(orthogAB)
 
+    #compute dimensions and sizes of testing classes
     testdimension = testing_input[0][0]
     sizeOftestA = testing_input[0][1]
     sizeOftestB = testing_input[0][2]
@@ -118,36 +105,27 @@ def run_train_test(training_input, testing_input):
     classOftestB = testing_input[2 + sizeOfA: 2 + sizeOfA + sizeOfB]
     classOftestC = testing_input[1 + sizeOfA + sizeOfB: ]
 
-    print(len(classOfA))
-    print(len(classOfB))
-    print(len(classOfC))
 
 
-
-    #compute centroids of A,B,C
-    centroidOftestA = centroid(classOftestA)
-    centroidOftestB = centroid(classOftestB)
-    centroidOftestC = centroid(classOftestC)
-
+    #initialize all values for dictionary
     TruePosA, TruePosB, TruePosC = 0.0, 0.0, 0.0
     FalsePosA, FalsePosB, FalsePosC = 0.0, 0.0, 0.0
     FalseNegA, FalseNegB, FalseNegC = 0.0, 0.0, 0.0
     TrueNegA, TrueNegB, TrueNegC = 0.0, 0.0, 0.0
     posA, posB, posC = 0.0, 0.0, 0.0
     negA, negB, negC = 0.0, 0.0, 0.0
-
-
     truePosRateA, truePosRateB, truePosRateC = 0.0, 0.0, 0.0
     falsePosRateA, falsePosRateB, falsePosRateC = 0.0, 0.0, 0.0
+
     index = 0
-    for i in range(1,76):
+    for i in range(1,sizeOftestA+sizeOftestB+sizeOftestC+1):
         score = classifyPoint(testing_input[i], orthogAB, orthogAC, orthogBC,discrimAB,discrimAC,discrimBC)
-        # predicted class A
+        # class A predictions
         if score == 1:
             posA += 1
             negB += 1
             negC += 1
-            # is actually A
+            # is A
             if index < sizeOftestA:
                 TruePosA += 1
                 TrueNegB += 1
@@ -161,7 +139,7 @@ def run_train_test(training_input, testing_input):
                 FalseNegC += 1
                 TrueNegB += 1
 
-        # predicted B
+        # class B predictions
         elif score == 2:
             negA += 1
             posB += 1
@@ -178,7 +156,7 @@ def run_train_test(training_input, testing_input):
                 FalsePosB += 1
                 FalseNegC += 1
                 TrueNegA += 1
-        # predicted C
+        # class C predictions
         elif score == 3:
             negA += 1
             negB += 1
@@ -197,21 +175,21 @@ def run_train_test(training_input, testing_input):
                 TrueNegB += 1
         index += 1
 
-    # class A
+    # compute rates for class A
     truePosRateA = TruePosA / float(sizeOftestA)
     falsePosRateA = FalsePosA / (float(sizeOftestB) + float(sizeOftestC))
     errorA = (FalsePosA + FalseNegA) / (posA + negA)
     accuracyA = (TruePosA + TrueNegA) / (posA + negA)
     precisionA = TruePosA / posA
 
-    # class B
+    # compute rates for class B
     truePosRateB = TruePosB / float(sizeOftestB)
     falsePosRateB = FalsePosB / (float(sizeOftestA) + float(sizeOftestC))
     errorB = (FalsePosB + FalseNegB) / (posB + negB)
     accuracyB = (TruePosB + TrueNegB) / (posB + negB)
     precisionB = TruePosB / posB
 
-    # class c
+    # compute rates for class C
     truePosRateC = TruePosC / float(sizeOftestC)
     falsePosRateC = FalsePosC / (float(sizeOftestA) + float(sizeOftestB))
     errorC = (FalsePosC + FalseNegC) / (posC + negC)
@@ -221,11 +199,14 @@ def run_train_test(training_input, testing_input):
 
 
     #results
-    print ('True positive rate =', (truePosRateA + truePosRateB + truePosRateC) / 3.0)
-    print ('False positive rate =', (falsePosRateA + falsePosRateB + falsePosRateC) / 3.0)
-    print ("Error rate = ", (errorA + errorB + errorC) / 3.0)
-    print ("Accuracy = ", (accuracyA + accuracyB + accuracyC) / 3.0)
-    print ("Precision = ", (precisionA + precisionB + precisionC) / 3.0)
+    dictionary = {}
+    dictionary['tpr'] = (truePosRateA + truePosRateB + truePosRateC) / 3.0
+    dictionary['fpr'] = (falsePosRateA + falsePosRateB + falsePosRateC) / 3.0
+    dictionary['error_rate'] = (errorA + errorB + errorC) / 3.0
+    dictionary['accuracy'] = (accuracyA + accuracyB + accuracyC) / 3.0
+    dictionary['precision'] = (precisionA + precisionB + precisionC) / 3.0
+
+    return dictionary
 
     pass
 
